@@ -23,9 +23,15 @@ def create_user(user: schemas.UserCreate, db: session = Depends(get_db)):
 
 
 @router.post("/users/badges/")
-def create_user(user_badge: schemas.UserBadgeCreate, db: session = Depends(get_db)):
+def add_badge_to_user(user_badge: schemas.UserBadgeCreate, db: session = Depends(get_db)):
     user_badge_db = crud.create_user_badge(db, user_badge)
     return jsonable_encoder(user_badge_db)
+
+
+@router.get("/users/{user_id}/posts/", response_model=List[schemas.PostRead])
+def get_posts_by_user_id(user_id: int, offset: int = 0, limit: int = 100, db: session = Depends(get_db)):
+    db_users = crud.get_posts_by_user_id(db, user_id, offset, limit)
+    return jsonable_encoder(db_users)
 
 
 @router.get("/users/", response_model=List[schemas.UserRead])
@@ -40,7 +46,19 @@ def create_post(post: schemas.PostCreate, db: session = Depends(get_db)):
     return jsonable_encoder(post_db)
 
 
-@router.get("/posts/", response_model=List[schemas.PostRead])
+@router.post("/posts/reaction")
+def create_reaction(reaction: schemas.PostReactionBase, db: session = Depends(get_db)):
+    post_db = crud.increment_post_reaction(db, reaction)
+    return jsonable_encoder(post_db)
+
+
+@router.get("/posts/{post_id}/comments")
+def get_comments(post_id: int, offset: int = 0, limit: int = 100, db: session = Depends(get_db)):
+    posts_db = crud.get_comments_by_post_id(db, post_id, offset, limit)
+    return jsonable_encoder(posts_db)
+
+
+@router.get("/posts/")
 def get_posts(offset: int = 0, limit: int = 100, db: session = Depends(get_db)):
     posts_db = crud.get_posts(db, offset, limit)
     return jsonable_encoder(posts_db)

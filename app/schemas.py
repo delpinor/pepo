@@ -12,6 +12,36 @@ class BadgeBase(BaseModel):
         orm_mode = True
 
 
+# UserBadges
+class UserBadgeBase(BaseModel):
+    user_id: int
+    badge_id: int
+
+    class Config:
+        orm_mode = True
+
+
+class UserBadgeCreate(UserBadgeBase):
+    pass
+
+
+class UserBadgeRead(UserBadgeBase):
+    badge: list[UserBadgeBase] = []
+
+    class Config:
+        orm_mode = True
+
+
+# Reactions
+class ReactionBase(BaseModel):
+    reaction_id: int
+    description: str
+    reaction_count: int
+
+    class Config:
+        orm_mode = True
+
+
 # Users
 class UserBase(BaseModel):
     username: str
@@ -33,8 +63,8 @@ class UserRead(UserBase):
     created_at: datetime
     status: Optional[str]
     badges: list[BadgeBase] = []
-
     class Config:
+        orm_mode: True
         json_encoders = {
             datetime: lambda v: v.strftime("%Y-%m-%d %H:%M:%S")
         }
@@ -42,7 +72,7 @@ class UserRead(UserBase):
 
 # Posts
 class PostBase(BaseModel):
-    description: str
+    text: str
     in_reply_to_post_id: int | None = None
     latitude: Optional[float]
     longitude: Optional[float]
@@ -68,29 +98,13 @@ class PostRead(PostBase):
     post_id: int
     status: str
     created_at: datetime
+    reactions: list[ReactionBase] = []
 
     class Config:
         orm_mode = True
         json_encoders = {
             datetime: lambda v: v.strftime("%Y-%m-%d %H:%M:%S")
         }
-
-
-# UserBadges
-class UserBadgeBase(BaseModel):
-    user_id: int
-    badge_id: int
-
-    class Config:
-        orm_mode = True
-
-
-class UserBadgeCreate(UserBadgeBase):
-    pass
-
-
-class UserBadgeRead(UserBadgeBase):
-    pass
 
 
 # PostReaction
@@ -108,3 +122,9 @@ class PostReactionCreate(PostReactionBase):
 
 class PostReactionRead(PostReactionBase):
     reaction_count: int
+
+
+class PostByAreaRead(BaseModel):
+    latitude: float
+    longitude: float
+    distance_in_km: int

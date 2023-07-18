@@ -1,8 +1,8 @@
-"""Relationship between User and Badge added
+"""Users, Posts, Reactions and Badges added
 
-Revision ID: ca0f2b1e406a
-Revises: 55326f0953c1
-Create Date: 2023-07-10 23:58:09.121775
+Revision ID: 67de35ff560f
+Revises: 9636c29d3e29
+Create Date: 2023-07-12 21:43:12.979939
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'ca0f2b1e406a'
-down_revision = '55326f0953c1'
+revision = '67de35ff560f'
+down_revision = '9636c29d3e29'
 branch_labels = None
 depends_on = None
 

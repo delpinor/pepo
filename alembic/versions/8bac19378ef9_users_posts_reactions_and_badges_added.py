@@ -1,8 +1,8 @@
-"""Users, Post, Badges and Reactions tables added
+"""Users, Posts, Reactions and Badges added
 
-Revision ID: 55326f0953c1
+Revision ID: 8bac19378ef9
 Revises: 
-Create Date: 2023-07-10 22:21:45.800054
+Create Date: 2023-07-12 01:14:33.012526
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '55326f0953c1'
+revision = '8bac19378ef9'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -21,12 +21,14 @@ def upgrade():
     op.create_table('badges',
     sa.Column('badge_id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('description', sa.String(), nullable=True),
-    sa.PrimaryKeyConstraint('badge_id')
+    sa.PrimaryKeyConstraint('badge_id'),
+    sa.UniqueConstraint('description')
     )
     op.create_table('reactions',
     sa.Column('reaction_id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('description', sa.String(), nullable=True),
-    sa.PrimaryKeyConstraint('reaction_id')
+    sa.PrimaryKeyConstraint('reaction_id'),
+    sa.UniqueConstraint('description')
     )
     op.create_table('users',
     sa.Column('user_id', sa.Integer(), autoincrement=True, nullable=False),

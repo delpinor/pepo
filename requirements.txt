@@ -6,3 +6,7 @@ pydantic>=1.6.2
 alembic==1.7.2
 psycopg2-binary==2.9.3
 geopy==2.3.0
+passlib==1.7.4
+python-jose==3.3.0
+python-multipart==0.0.6
+

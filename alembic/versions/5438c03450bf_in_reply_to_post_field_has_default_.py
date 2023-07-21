@@ -1,8 +1,8 @@
-"""Users, Posts, Reactions and Badges added
+"""in reply to post field has default value 0 
 
-Revision ID: 67de35ff560f
-Revises: 9636c29d3e29
-Create Date: 2023-07-12 21:43:12.979939
+Revision ID: 5438c03450bf
+Revises: 41263fe9fe92
+Create Date: 2023-07-20 20:23:25.145667
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '67de35ff560f'
-down_revision = '9636c29d3e29'
+revision = '5438c03450bf'
+down_revision = '41263fe9fe92'
 branch_labels = None
 depends_on = None
 

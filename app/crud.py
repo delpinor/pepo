@@ -1,12 +1,22 @@
+from fastapi import Query
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy import inspect
+from passlib.context import CryptContext
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.serializer import dumps
-from sqlalchemy.orm import Session, joinedload, join, subqueryload, contains_eager, Query
+from sqlalchemy.orm import Session
 from . import models, schemas
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+CLOSE_TO_ME_MEANS_KM = 2
+
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
 
 
 def create_user(db: Session, user: schemas.UserCreate):
+    user.password = get_password_hash(user.password)
     db_user = models.User(**user.dict())
     db.add(db_user)
     db.commit()
@@ -27,6 +37,11 @@ def get_users(db: Session, offset: int = 0, limit: int = 100):
     return users
 
 
+def get_user(db: Session, username: str = None):
+    db_user = db.query(models.User).filter(models.User.username == username).one()
+    return db_user
+
+
 def get_user_by_id(db: Session, user_id: int):
     user_query = db.query(models.User).filter(models.User.user_id == user_id)
     return user_query.first()
@@ -45,7 +60,17 @@ def create_post(db: Session, post: schemas.PostCreate):
     db.add(db_post)
     db.commit()
     db.refresh(db_post)
+
+    initialize_reaction_counter(db, db_post.post_id)
     return db_post
+
+
+def initialize_reaction_counter(db: Session, post_id: int):
+    db_reactions = db.query(models.Reaction).all()
+    for reaction in db_reactions:
+        db_reaction_post = models.PostReaction(post_id=post_id, reaction_id=reaction.reaction_id)
+        db.add(db_reaction_post)
+    db.commit()
 
 
 def get_posts_by_user_id(db: Session, user_id: int, offset: int = 0, limit: int = 100):
@@ -54,7 +79,7 @@ def get_posts_by_user_id(db: Session, user_id: int, offset: int = 0, limit: int 
 
 
 def get_comments_by_post_id(db: Session, post_id: int, offset: int = 0, limit: int = 100):
-    db_posts = db.query(models.Post).filter(models.Post.in_reply_to_post_id == post_id).\
+    db_posts = db.query(models.Post).filter(models.Post.in_reply_to_post_id == post_id). \
         offset(offset).limit(limit).all()
     return db_posts
 
@@ -85,10 +110,18 @@ def get_posts_by_creation_date(db: Session, offset: int = 0, limit: int = 100):
     return posts_with_reaction_count(db_posts)
 
 
-def get_post_by_area(db: Session, post_area: schemas.PostByAreaRead, offset: int = 0, limit: int = 100):
+def get_post_by_area(db: Session, keyword: str = "", latitude: float = 0, longitude: float = 0, offset: int = 0,
+                     limit: int = 100):
     db_posts = db.query(models.Post).filter(
-        models.Post.distance_from((post_area.latitude, post_area.longitude)) <= post_area.distance_in_km)
-    return db_posts.offset(offset).limit(limit).all()
+        (func.degrees(
+            func.acos(
+                func.sin(func.radians(latitude)) * func.sin(func.radians(models.Post.latitude)) +
+                func.cos(func.radians(latitude)) * func.cos(func.radians(models.Post.latitude)) *
+                func.cos(func.radians(longitude - models.Post.longitude))
+            )
+        ) * 60 * 1.1515 * 1.609344) <= CLOSE_TO_ME_MEANS_KM, models.Post.text.ilike(f"%{keyword}%"),
+        models.Post.in_reply_to_post_id == 0).order_by(models.Post.created_at.desc()).offset(offset).limit(limit).all()
+    return db_posts
 
 
 def increment_post_reaction(db: Session, reaction: schemas.PostReactionBase):
@@ -105,3 +138,14 @@ def increment_post_reaction(db: Session, reaction: schemas.PostReactionBase):
                    models.PostReaction.reaction_id == reaction.reaction_id).first()
         db_reaction.reaction_count += 1
         db.commit()
+
+
+def get_posts_by(db: Session, close_to_me: bool, keyword: str, latitude: float, longitude: float,
+                 offset: int, limit: int):
+    if close_to_me:
+        db_posts = get_post_by_area(db, keyword, latitude, longitude, offset, limit)
+    else:
+        db_posts = db.query(models.Post).filter(models.Post.text.ilike(f"%{keyword}%"),
+                                                models.Post.in_reply_to_post_id == 0).\
+            order_by(models.Post.created_at.desc()).offset(offset).limit(limit).all()
+    return posts_with_reaction_count(db_posts)

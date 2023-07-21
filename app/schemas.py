@@ -3,6 +3,16 @@ from typing import Optional
 from pydantic import BaseModel
 
 
+# Token
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    username: str | None = None
+
+
 # Badges
 class BadgeBase(BaseModel):
     badge_id: int
@@ -45,8 +55,6 @@ class ReactionBase(BaseModel):
 # Users
 class UserBase(BaseModel):
     username: str
-    name: Optional[str]
-    surname: Optional[str]
     email: str
     device_token: Optional[str]
 
@@ -55,7 +63,7 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    pass
+    password: str
 
 
 class UserRead(UserBase):
@@ -63,6 +71,7 @@ class UserRead(UserBase):
     created_at: datetime
     status: Optional[str]
     badges: list[BadgeBase] = []
+
     class Config:
         orm_mode: True
         json_encoders = {
@@ -101,7 +110,7 @@ class PostRead(PostBase):
     reactions: list[ReactionBase] = []
 
     class Config:
-        orm_mode = True
+        orm_mode: True
         json_encoders = {
             datetime: lambda v: v.strftime("%Y-%m-%d %H:%M:%S")
         }

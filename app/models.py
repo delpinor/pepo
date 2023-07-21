@@ -4,6 +4,7 @@ from sqlalchemy.ext.hybrid import hybrid_method
 from sqlalchemy.orm import relationship
 from .database import Base
 import geopy.distance
+from sqlalchemy import func
 
 
 class UserBadge(Base):
@@ -49,8 +50,7 @@ class User(Base):
 
     user_id = Column(Integer, autoincrement=True, primary_key=True)
     username = Column(String, unique=True)
-    name = Column(String)
-    surname = Column(String)
+    password = Column(String)
     email = Column(String, unique=True, index=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     device_token = Column(String, nullable=True)
@@ -65,7 +65,7 @@ class Post(Base):
 
     post_id = Column(Integer, autoincrement=True, primary_key=True)
     text = Column(String)
-    in_reply_to_post_id = Column(Integer, nullable=True)
+    in_reply_to_post_id = Column(Integer, nullable=True, default=0)
     latitude = Column(Float(precision=32))
     longitude = Column(Float(precision=32))
     status = Column(String, default="active")
@@ -79,3 +79,11 @@ class Post(Base):
     def distance_from(self, coords) -> float:
         coords_post = (self.latitude, self.longitude)
         return geopy.distance.geodesic(coords_post, coords).km
+
+    @distance_from.expression
+    def distance_from(cls, coords) -> float:
+        coords_post = (cls.latitude, cls.longitude)
+        return geopy.distance.geodesic(coords_post, coords).km
+
+
+

@@ -85,7 +85,7 @@ def get_comments_by_post_id(db: Session, post_id: int, offset: int = 0, limit: i
 
 
 def get_posts(db: Session, offset: int = 0, limit: int = 100):
-    db_posts = db.query(models.Post).offset(offset).limit(limit)
+    db_posts = db.query(models.Post).filter(models.Post.in_reply_to_post_id == 0).offset(offset).limit(limit)
     return posts_with_reaction_count(db_posts)
 
 

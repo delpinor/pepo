@@ -63,7 +63,7 @@ def get_comments(post_id: int, offset: int = 0, limit: int = 100, db: Session = 
     return jsonable_encoder(posts_db)
 
 
-@router.get("/posts/")
+@router.get("/posts/", response_model=List[schemas.PostRead])
 def get_posts(offset: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     posts_db = crud.get_posts(db, offset, limit)
     return jsonable_encoder(posts_db)
